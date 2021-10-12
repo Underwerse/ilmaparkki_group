@@ -71,8 +71,28 @@ figcaption {
 	font-family: $font-family;
 }
 
-p {
+p:not(#infoWindowText) {
 	color: #FFFFFF;
+}
+
+#infoWindowText {
+	line-height: 30px;
+	margin: 0 0 5px 0;
+	min-width: 120px;
+	position: relative;
+	text-align: left;
+
+	img {
+		width: 30px;
+		padding-left: 10px;
+		position: absolute;
+		transition: .3s;
+		
+		&:hover {
+			cursor: pointer;
+			transform: scale(1.15);
+		}
+	}
 }
 
 div {

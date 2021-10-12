@@ -52,7 +52,78 @@ function initMap() {
       .then(response => response.json())
       .then(data => {
         printLocationData(map, data.results[0], marker);
+      })
+      .catch(err => console.log(err.message));
+  }
+
+  /**
+   * Osoitteen tietojen tulostaminen funktio
+   * @param {*} map     sivustolla oleva kartta
+   * @param {*} place   löydetty paikka
+   * @param {*} marker  luottu merkki
+   */
+  const printLocationData = (map, place, marker) => {
+    var address = '';
+    if (place.address_components) {
+      address = [
+        (place.address_components[0] && place.address_components[0].short_name || ''),
+        (place.address_components[1] && place.address_components[1].short_name || ''),
+        (place.address_components[2] && place.address_components[2].short_name || '')
+      ].join(' ');
+    }
+
+    let durationMsg = '';
+
+    if (marker.type === 'currentLocation') {
+      durationMsg = `<div><strong>Osoitteesi:</strong><br>${address}`;
+    } else if (marker.type === 'searchLocation') {
+      durationMsg = `${address}`;
+    } else {
+      durationMsg = `
+        <strong>Osoite:</strong><br>${address} 
+        ${getDurationMsg(marker)}
+        <p
+          id='infoWindowText'><strong>Reittiohjeet</strong>
+          <img id='findRouteBtn' src="../media/img/route.png">
+        </p>`;
+    }
+
+    // Ponnahdusilmoitusta löydettysijainnissa luominen
+    infoWindow.setContent(durationMsg);
+    infoWindow.open(map, marker);
+
+    // Löytöosoitteen tietojen laittaminen taulukkoon sivulle
+    for (var i = 0; i < place.address_components.length; i++) {
+      if (place.address_components[i].types[0] == 'postal_code') {
+        document.getElementById('postal_code').innerHTML = place.address_components[i].long_name;
+      }
+      if (place.address_components[i].types[0] == 'country') {
+        document.getElementById('country').innerHTML = place.address_components[i].long_name;
+      }
+    }
+    document.getElementById('location').innerHTML = place.formatted_address;
+
+    // Osoitetietotaulukkoa sivulta saaminen
+    var receivedGeoData = document.querySelector('.geoData');
+    // Osoitetietojen taulukkoa näyttäminen sivulle
+    receivedGeoData.classList.remove('hidden');
+  }
+
+  const printClickedMarkerData = (map, marker) => {
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${marker.address}&key=${API_KEY_GEOCODE}`;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        printLocationData(map, data.results[0], marker);
         // console.log(data.results[0].address_components);
+        setTimeout(() => {
+          document.querySelector('#findRouteBtn')
+            .addEventListener(
+              'click', () => {
+                getDirection(data.results[0].formatted_address)
+              }
+            );
+        }, 100);
       })
       .catch(err => console.log(err.message));
   }
@@ -74,6 +145,7 @@ function initMap() {
     // Napin toiminto
     locationButton.addEventListener("click", () => {
       removeNonPlaceMarkers();
+      hideRoute();
       // Kun sijaintihaku onnistuu (laitteen GPS on päällä)
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -147,12 +219,13 @@ function initMap() {
     var autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.bindTo('bounds', map);
 
-    
+
     // Osoitehakukentan muutosten seuranta toiminto
     autocomplete.addListener('place_changed', function () {
       // Viimeistä ponnahdusilmoitusta sulkeminen
       infoWindow.close();
       removeNonPlaceMarkers();
+      hideRoute();
       // Löydetyn osoitteen merkkiä luominen kartalle
       markerSearchPlace = new google.maps.Marker({
         map: map,
@@ -186,64 +259,71 @@ function initMap() {
 
   setSearchLocationFunctionality();
 
-  /**
-   * Osoitteen tietojen tulostaminen funktio
-   * @param {*} map     sivustolla oleva kartta
-   * @param {*} place   löydetty paikka
-   * @param {*} marker  luottu merkki
-   */
-  const printLocationData = (map, place, marker) => {
-    var address = '';
-    if (place.address_components) {
-      address = [
-        (place.address_components[0] && place.address_components[0].short_name || ''),
-        (place.address_components[1] && place.address_components[1].short_name || ''),
-        (place.address_components[2] && place.address_components[2].short_name || '')
-      ].join(' ');
-    }
 
-    let durationMsg = '';
 
-    if (marker.type === 'currentLocation') {
-      durationMsg += `<div><strong>Osoitteesi:</strong><br>${address}`;
-    } else if (marker.type === 'searchLocation') {
-      durationMsg += `${address}`;
-    } else {
-      durationMsg += `<div><strong>Osoite:</strong><br>${address} ${getDurationMsg(marker)}`;
-    }
 
-    // Ponnahdusilmoitusta löydettysijainnissa luominen
-    // infoWindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
-    infoWindow.setContent(durationMsg);
-    infoWindow.open(map, marker);
 
-    // Löytöosoitteen tietojen laittaminen taulukkoon sivulle
-    for (var i = 0; i < place.address_components.length; i++) {
-      if (place.address_components[i].types[0] == 'postal_code') {
-        document.getElementById('postal_code').innerHTML = place.address_components[i].long_name;
+
+
+
+
+  var directionsService = new google.maps.DirectionsService();
+  var directionsDisplay = new google.maps.DirectionsRenderer();
+
+  function getDirection(destination) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        // Nykyistä positiota saaminen
+        const pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.lat},${pos.lng}&key=${API_KEY_GEOCODE}`;
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            origin = data.results[0].formatted_address;
+            // console.log(origin);
+            hideRoute();
+
+            directionsDisplay.setMap(map);
+            var request = {
+              origin: origin,
+              destination: destination,
+              travelMode: google.maps.TravelMode.DRIVING,
+            }
+
+            directionsService.route(request, (result, status) => {
+              if (status === google.maps.DirectionsStatus.OK) {
+                let distance = result.routes[0].legs[0].distance.text;
+                let duration = result.routes[0].legs[0].duration.text;
+                document.getElementById('routeDistance').innerText = distance;
+                document.getElementById('routeDuration').innerText = duration;
+                document.getElementById('routeDistanceRow').classList.remove('hidden');
+                document.getElementById('routeDurationRow').classList.remove('hidden');
+
+
+                directionsDisplay.setDirections(result);
+              } else {
+                hideRoute();
+              }
+            })
+          })
+          .catch(err => console.log(err.message));
       }
-      if (place.address_components[i].types[0] == 'country') {
-        document.getElementById('country').innerHTML = place.address_components[i].long_name;
-      }
-    }
-    document.getElementById('location').innerHTML = place.formatted_address;
-
-    // Osoitetietotaulukkoa sivulta saaminen
-    var receivedGeoData = document.querySelector('.geoData');
-    // Osoitetietojen taulukkoa näyttäminen sivulle
-    receivedGeoData.classList.remove('hidden');
+    );
   }
 
-  const printClickedMarkerData = (map, marker) => {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${marker.address}&key=${API_KEY_GEOCODE}`;
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        printLocationData(map, data.results[0], marker);
-        // console.log(data.results[0].address_components);
-      })
-      .catch(err => console.log(err.message));
+  function hideRoute() {
+    directionsDisplay.setDirections({
+      routes: []
+    });
+    document.getElementById('routeDistanceRow').classList.add('hidden');
+    document.getElementById('routeDurationRow').classList.add('hidden');
   }
+
+
 
   /* 
   Nykyisiä merkkeja tietojen lukeminen
@@ -301,11 +381,11 @@ function initMap() {
     let msg = '';
     if (place.duration !== 0) {
       msg += `
-        <h4>Sallittu aika: ${place.duration} t.</h4>
+        <p id='infoWindowText'><strong>Sallittu aika:</strong> ${place.duration} t.</p>
       `
     } else {
       msg += `
-        <h4>Sallittu aika: ei rajoituksia</h4>
+        <p id='infoWindowText'>Sallittu aika: ei rajoituksia</p>
       `
     }
 
@@ -322,7 +402,7 @@ function initMap() {
       markerSearchPlace.setVisible(false);
       markerSearchPlace.setMap(null);
       markerSearchPlace = null;
-    } 
+    }
   }
 
   /**
@@ -339,6 +419,7 @@ function initMap() {
       // Painetulla merkilla tietojen näyttö
       removeNonPlaceMarkers();
       printClickedMarkerData(map, this);
+
     }
   }
 

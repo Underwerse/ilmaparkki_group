@@ -68,8 +68,30 @@ figcaption {
   font-family: "Roboto", sans-serif;
 }
 
-p {
+p:not(#infoWindowText) {
   color: #FFFFFF;
+}
+
+#infoWindowText {
+  line-height: 30px;
+  margin: 0 0 5px 0;
+  min-width: 120px;
+  position: relative;
+  text-align: left;
+}
+
+#infoWindowText img {
+  width: 30px;
+  padding-left: 10px;
+  position: absolute;
+  -webkit-transition: .3s;
+  transition: .3s;
+}
+
+#infoWindowText img:hover {
+  cursor: pointer;
+  -webkit-transform: scale(1.15);
+          transform: scale(1.15);
 }
 
 div {

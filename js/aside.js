@@ -58,6 +58,14 @@ const aside = `
             <td>Maa:</td>
             <td><span id="country"></span></td>
           </tr>
+          <tr id='routeDistanceRow' class='hidden'>
+            <td>Etäisyys:</td>
+            <td><span id="routeDistance"></span></td>
+          </tr>
+          <tr id='routeDurationRow' class='hidden'>
+            <td>Ajoaika:</td>
+            <td><span id="routeDuration"></span></td>
+          </tr>
         </tbody>
       </table>
     </section>
