@@ -28,9 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
   /* Sää ennuste API
   */
-  const getWeatherData = () => {
+  /* const getWeatherData = () => {
     //Tehdään muuttujia
-    const weatherApiKey = '6571d1d936905542a1429c32c9433d9c';
+    const weatherApiKey = '7a2a285eb61c6138308c6b1df9b2fa1b';
     const apiUrl = `http://api.weatherstack.com/current?access_key=${weatherApiKey}&units=m&query=`;
     let apiQuery;
     const button = document.getElementById('searchButton');
@@ -53,14 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
     search(defaultQuery);
 
     //Tehdään haku rajapinta nettisivulle
-    function search(apiQuery) {
-      fetch(apiQuery).then(function (response) {
-        return response.json();
-      }).then(function (json) {
-        processResults(json);
-      }).catch(function (error) {
-        console.log(error.message);
-      });
+    async function search(apiQuery) {
+      let response = await fetch(apiQuery);
+      let weatherData = await response.json();
+      processResults(weatherData);
     }
 
     //Luetaan etsittyä dataa ja tulostetaan innerHTML komennolla weatherAdjuster elementtiin
@@ -80,6 +76,29 @@ document.addEventListener("DOMContentLoaded", () => {
       //Lisätään tiedot innerHTML komennolla weather elementtiin
       weatherElem.innerHTML += htmlCode;
     }
+  } */
+
+  async function getWeatherData() {
+    //Tehdään muuttujia
+    const apiUrl = 'http://api.openweathermap.org/data/2.5/weather?id=660129&appid=b55f639a32a873e5d0147d5233056298&lang=fi';
+
+    let response = await fetch(apiUrl);
+    let weatherData = await response.json();
+    //Luetaan etsittyä dataa ja tulostetaan innerHTML komennolla weatherAdjuster elementtiin
+    const weatherElem = document.getElementById('weatherAdjuster');
+    let htmlCode = `<p>`;
+
+    let icon = `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`;
+    htmlCode += `<img src='${icon}'><img>`;
+    htmlCode += `Paikka: ${weatherData.name}<br>`;
+    htmlCode += `Sään kuvaus: ${weatherData.weather[0].description}<br>`;
+    htmlCode += `Lämpötila: ${Math.floor(weatherData.main.temp - 273)} °C<br>`;
+    htmlCode += `Ilmankosteus: ${weatherData.main.humidity}%<br>`;
+    htmlCode += `Tuulen nopeus: ${weatherData.wind.speed} m/s<br>`;
+    htmlCode += `</p>`;
+
+    //Lisätään tiedot innerHTML komennolla weather elementtiin
+    weatherElem.innerHTML += htmlCode;
   }
 
   getWeatherData();
@@ -88,25 +107,27 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * COVID-19 tiedot API
    */
-  function getCovidData() {
+  async function getCovidData() {
     //Tehdään muuttujia
-    const covidApiUrl = 'https://api.apify.com/v2/key-value-stores/jEFt5tgCTMfjJpLD3/records/LATEST?disableRedirect=true';
+    const covidApiUrl = 'https://covid-api.com/api/reports/total?date=2021-10-12&iso=FIN';
 
-    fetch(covidApiUrl).then(function (response) {
-      return response.json();
-    }).then(function (json) {
-      covidResults(json);
-    }).catch(function (error) {
-      console.log(error.message);
+    let response = await fetch(covidApiUrl, {
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      }
     });
+
+    let covidData = await response.json();
+
+    covidResults(covidData.data);
 
     //Luetaan etsittyä dataa ja tulostetaan innerHTML komennolla weatherAdjuster elementtiin
     function covidResults(jsonData) {
       const covidElem = document.getElementById('covid');
       let formatter = new Intl.NumberFormat('fi');
-      document.getElementById('newDesease').innerHTML = formatter.format(jsonData.infectedDaily);
-      document.getElementById('deseaseTotal').innerHTML = formatter.format(jsonData.infected);
-      document.getElementById('newDeaths').innerHTML = formatter.format(jsonData.deathsDaily);
+      document.getElementById('newDesease').innerHTML = formatter.format(jsonData.confirmed_diff);
+      document.getElementById('deseaseTotal').innerHTML = formatter.format(jsonData.confirmed);
+      document.getElementById('newDeaths').innerHTML = formatter.format(jsonData.deaths_diff);
       document.getElementById('deathsTotal').innerHTML = formatter.format(jsonData.deaths);
     }
   }

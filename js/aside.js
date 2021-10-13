@@ -7,10 +7,6 @@ const aside = `
     
     <section>
       <h2>Sää ennuste</h2>
-      <form id="haku">
-        <input id="search" type="text" name="search" placeholder="Hae paikkaa">
-        <button id="searchButton" type="button">Hae</button>
-		  </form>
 
       <div id="weatherAdjuster">
 
