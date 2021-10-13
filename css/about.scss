@@ -21,3 +21,44 @@
     }
   }
 }
+
+.projectDetails {
+
+		ol {
+			font-size: 20px;
+			counter-reset: myCounter;
+      padding: 0 10px;
+
+			li {
+				margin: 40px 0;
+				background-color: #2849a4;
+				border-radius: 15px;
+				padding: 30px;
+				margin-bottom: 20px;
+				list-style: none;
+
+				h3 {
+					margin: 0px;
+
+					&::before {
+						counter-increment: myCounter;
+						content: counter(myCounter);
+						display: inline-block;
+						text-align: center;
+						margin: 0 10px 0 0;
+					}
+				}
+
+				p {
+					line-height: 30px;
+					color: black;
+          text-align: left;
+				}
+			}
+		}
+
+    img {
+      width: 95%;
+      padding-bottom: 20px;
+    }
+}

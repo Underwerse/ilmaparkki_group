@@ -38,5 +38,29 @@
     },
     "address": "Espoo, Sateenkaari 3A",
     "duration": 4
+  },
+  {
+    "position": {
+      "lat": 60.166779,
+      "lng": 24.979049
+    },
+    "address": "Helsinki, Katajanokanranta 10",
+    "duration": 24
+  },
+  {
+    "position": {
+      "lat": 60.183757,
+      "lng": 24.963214
+    },
+    "address": "Helsinki, Lintulahdenkuja 6",
+    "duration": 8
+  },
+  {
+    "position": {
+      "lat": 60.292982,
+      "lng": 24.560036
+    },
+    "address": "Espoo, Nuuksiontie 59",
+    "duration": 0
   }
 ]
