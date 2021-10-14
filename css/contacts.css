@@ -12,6 +12,17 @@
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
+  padding-bottom: 30px;
+}
+
+.contacts .imgContainer .imgCol {
+  -webkit-transition: .3s;
+  transition: .3s;
+}
+
+.contacts .imgContainer .imgCol:hover {
+  -webkit-transform: scale(1.15);
+          transform: scale(1.15);
 }
 
 .contacts .imgContainer .imgCol img {
