@@ -25,61 +25,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setActiveMenu();
 
-  /**
-  /* Sää ennuste API
-  */
-  const getWeatherData = () => {
+  async function getWeatherData() {
     //Tehdään muuttujia
-    const weatherApiKey = '6571d1d936905542a1429c32c9433d9c';
-    const apiUrl = `http://api.weatherstack.com/current?access_key=${weatherApiKey}&units=m&query=`;
-    let apiQuery;
-    const button = document.getElementById('searchButton');
+    const apiUrl = 'http://api.openweathermap.org/data/2.5/weather?id=660129&appid=b55f639a32a873e5d0147d5233056298&lang=fi';
 
-    //Katsotaan onko hakunappia painettu
-    button.addEventListener('click', makeQuery);
-
-    //Kysellään annetut tiedot omalta nettisivulta
-    function makeQuery() {
-
-      //Poistaa napin käytöstä, kunnes sivun lataa uudelleen
-      document.getElementById("searchButton").disabled = true;
-
-      apiQuery = apiUrl + document.getElementById('search').value;
-
-      search(apiQuery);
-    }
-
-    const defaultQuery = apiUrl + 'Espoo';
-    search(defaultQuery);
-
-    //Tehdään haku rajapinta nettisivulle
-    function search(apiQuery) {
-      fetch(apiQuery).then(function (response) {
-        return response.json();
-      }).then(function (json) {
-        processResults(json);
-      }).catch(function (error) {
-        console.log(error.message);
-      });
-    }
-
+    let response = await fetch(apiUrl);
+    let weatherData = await response.json();
     //Luetaan etsittyä dataa ja tulostetaan innerHTML komennolla weatherAdjuster elementtiin
-    function processResults(jsonData) {
-      const weatherElem = document.getElementById('weatherAdjuster');
-      let htmlCode = `<p>`;
+    const weatherElem = document.getElementById('weatherAdjuster');
+    let htmlCode = `<p>`;
 
-      htmlCode += `<img src='${jsonData.current.weather_icons}'><img>`;
-      htmlCode += `Paikka: ${jsonData.location.name}<br>`;
-      htmlCode += `Sään kuvaus: ${jsonData.current.weather_descriptions}<br>`;
-      htmlCode += `Lämpötila: ${jsonData.current.temperature}°C<br>`;
-      htmlCode += `Tuntuu: ${jsonData.current.feelslike}°C<br>`;
-      htmlCode += `Tuulen nopeus: ${jsonData.current.wind_speed}m/s<br>`;
-      htmlCode += `Ilmankosteus: ${jsonData.current.humidity}%<br>`;
-      htmlCode += `</p>`;
+    let icon = `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`;
+    htmlCode += `<img src='${icon}'><img>`;
+    htmlCode += `Paikka: ${weatherData.name}<br>`;
+    htmlCode += `Sään kuvaus: ${weatherData.weather[0].description}<br>`;
+    htmlCode += `Lämpötila: ${Math.floor(weatherData.main.temp - 273)} °C<br>`;
+    htmlCode += `Ilmankosteus: ${weatherData.main.humidity}%<br>`;
+    htmlCode += `Tuulen nopeus: ${weatherData.wind.speed} m/s<br>`;
+    htmlCode += `</p>`;
 
-      //Lisätään tiedot innerHTML komennolla weather elementtiin
-      weatherElem.innerHTML += htmlCode;
-    }
+    //Lisätään tiedot innerHTML komennolla weather elementtiin
+    weatherElem.innerHTML += htmlCode;
   }
 
   getWeatherData();
@@ -88,25 +54,39 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * COVID-19 tiedot API
    */
-  function getCovidData() {
+  async function getCovidData() {
     //Tehdään muuttujia
-    const covidApiUrl = 'https://api.apify.com/v2/key-value-stores/jEFt5tgCTMfjJpLD3/records/LATEST?disableRedirect=true';
+    let date = new Date();
+    let ye = new Intl.DateTimeFormat('en', {
+      year: 'numeric'
+    }).format(date);
+    let mo = new Intl.DateTimeFormat('en', {
+      month: '2-digit'
+    }).format(date);
+    let da = new Intl.DateTimeFormat('en', {
+      day: '2-digit'
+    }).format(date);
+    // Määritetään päivä eilispäiväksi (jotta tilasto olisi jo saatavilla)
+    da === 1 ? da = 30 : da -= 1;
+    const covidApiUrl = `https://covid-api.com/api/reports/total?date=${ye}-${mo}-${da}&iso=FIN`;
 
-    fetch(covidApiUrl).then(function (response) {
-      return response.json();
-    }).then(function (json) {
-      covidResults(json);
-    }).catch(function (error) {
-      console.log(error.message);
+    let response = await fetch(covidApiUrl, {
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      }
     });
+
+    let covidData = await response.json();
+
+    covidResults(covidData.data);
 
     //Luetaan etsittyä dataa ja tulostetaan innerHTML komennolla weatherAdjuster elementtiin
     function covidResults(jsonData) {
       const covidElem = document.getElementById('covid');
       let formatter = new Intl.NumberFormat('fi');
-      document.getElementById('newDesease').innerHTML = formatter.format(jsonData.infectedDaily);
-      document.getElementById('deseaseTotal').innerHTML = formatter.format(jsonData.infected);
-      document.getElementById('newDeaths').innerHTML = formatter.format(jsonData.deathsDaily);
+      document.getElementById('newDesease').innerHTML = formatter.format(jsonData.confirmed_diff);
+      document.getElementById('deseaseTotal').innerHTML = formatter.format(jsonData.confirmed);
+      document.getElementById('newDeaths').innerHTML = formatter.format(jsonData.deaths_diff);
       document.getElementById('deathsTotal').innerHTML = formatter.format(jsonData.deaths);
     }
   }

@@ -20,3 +20,45 @@ $width: 1280px;
     width: 95%;
   }
 }
+
+@media (min-width: 350px) {
+  .contacts .imgContainer .imgCol {
+
+    img {
+      max-width: 260px;
+      max-height: 260px;
+    }
+
+    figcaption {
+      width: 260px;
+    }
+  }
+}
+
+@media (min-width: 550px) {
+  .contacts .imgContainer .imgCol {
+
+    img {
+      max-width: 220px;
+      max-height: 220px;
+    }
+
+    figcaption {
+      width: 220px;
+    }
+  }
+}
+
+@media (min-width: 650px) {
+  .contacts .imgContainer .imgCol {
+
+    img {
+      max-width: 200px;
+      max-height: 200px;
+    }
+
+    figcaption {
+      width: 200px;
+    }
+  }
+}

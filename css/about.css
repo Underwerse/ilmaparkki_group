@@ -26,4 +26,42 @@
 .about .personsWrap .person img {
   width: 100%;
 }
+
+.projectDetails ol {
+  font-size: 20px;
+  counter-reset: myCounter;
+  padding: 0 10px;
+}
+
+.projectDetails ol li {
+  margin: 40px 0;
+  background-color: #2849a4;
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 20px;
+  list-style: none;
+}
+
+.projectDetails ol li h3 {
+  margin: 0px;
+}
+
+.projectDetails ol li h3::before {
+  counter-increment: myCounter;
+  content: counter(myCounter);
+  display: inline-block;
+  text-align: center;
+  margin: 0 10px 0 0;
+}
+
+.projectDetails ol li p {
+  line-height: 30px;
+  color: black;
+  text-align: left;
+}
+
+.projectDetails img {
+  width: 95%;
+  padding-bottom: 20px;
+}
 /*# sourceMappingURL=about.css.map */

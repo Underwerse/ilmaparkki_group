@@ -15,4 +15,34 @@
     width: 95%;
   }
 }
+
+@media (min-width: 350px) {
+  .contacts .imgContainer .imgCol img {
+    max-width: 260px;
+    max-height: 260px;
+  }
+  .contacts .imgContainer .imgCol figcaption {
+    width: 260px;
+  }
+}
+
+@media (min-width: 550px) {
+  .contacts .imgContainer .imgCol img {
+    max-width: 220px;
+    max-height: 220px;
+  }
+  .contacts .imgContainer .imgCol figcaption {
+    width: 220px;
+  }
+}
+
+@media (min-width: 650px) {
+  .contacts .imgContainer .imgCol img {
+    max-width: 200px;
+    max-height: 200px;
+  }
+  .contacts .imgContainer .imgCol figcaption {
+    width: 200px;
+  }
+}
 /*# sourceMappingURL=media.css.map */

@@ -1,4 +1,4 @@
-// Tämä on kartan rajapinnan skripti
+// Google mapsin API:n skripti
 'use strict';
 
 var map, infoWindow, markerCurrentPlace, markerSearchPlace;
@@ -40,9 +40,9 @@ function initMap() {
 
   /**
    * Osoitetta yksityikohtia antaminen koordinoiden perusteella
-   * @param {*} map     sivustolla oleva kartta
-   * @param {*} coords  koordinaatit
-   * @param {*} marker  paikan luottu merkki
+   * @param {object} map     sivustolla oleva kartta
+   * @param {object} coords  koordinaatit
+   * @param {object} marker  paikan luottu merkki
    */
   const getAddressFromCoords = (map, coords, marker) => {
     const lat = coords.lat;
@@ -64,16 +64,13 @@ function initMap() {
    */
   const printLocationData = (map, place, marker) => {
     var address = '';
-    if (place.address_components) {
-      address = [
-        (place.address_components[0] && place.address_components[0].short_name || ''),
-        (place.address_components[1] && place.address_components[1].short_name || ''),
-        (place.address_components[2] && place.address_components[2].short_name || '')
-      ].join(' ');
+    if (place.formatted_address) {
+      address = place.formatted_address.split(',', 2);
     }
 
     let durationMsg = '';
 
+    // Ponnahdusilmoituksen viestiä luominen merkin tyypin perusteella
     if (marker.type === 'currentLocation') {
       durationMsg = `<div><strong>Osoitteesi:</strong><br>${address}`;
     } else if (marker.type === 'searchLocation') {
@@ -109,17 +106,25 @@ function initMap() {
     receivedGeoData.classList.remove('hidden');
   }
 
-  const printClickedMarkerData = (map, marker) => {
+  /**
+   * Klikatun merkin tietojen tuloste funktio
+   * @param {object} map 
+   * @param {object} marker 
+   */
+  const getClickedMarkerAddress = (map, marker) => {
+    // Google API:n linkki
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${marker.address}&key=${API_KEY_GEOCODE}`;
     fetch(url)
       .then(response => response.json())
       .then(data => {
+        // Otetun merkin tietojen tulosteeseen antaminen
         printLocationData(map, data.results[0], marker);
-        // console.log(data.results[0].address_components);
+        // Klikatun merkin linkille tapahtumankäsitteliäjn nimeäminen
         setTimeout(() => {
           document.querySelector('#findRouteBtn')
             .addEventListener(
               'click', () => {
+                // Tapahtumankäsittelijän funktio (reititystä varten)
                 getDirection(data.results[0].formatted_address)
               }
             );
@@ -259,18 +264,17 @@ function initMap() {
 
   setSearchLocationFunctionality();
 
-
-
-
-
-
-
-
-
+  // Reititys-toimintoa lisääminen
+  // Luodaan Google Directions-API:n oliot
   var directionsService = new google.maps.DirectionsService();
   var directionsDisplay = new google.maps.DirectionsRenderer();
 
+  /**
+   * Reititys-toiminnan pääfunktio
+   * @param {String} destination  Toimituspisteen osoite
+   */
   function getDirection(destination) {
+    // Otetaan nykysijäinnin osoitteen
     navigator.geolocation.getCurrentPosition(
       (position) => {
         // Nykyistä positiota saaminen
@@ -287,6 +291,7 @@ function initMap() {
             // console.log(origin);
             hideRoute();
 
+            // Luodaan reititys lähde- ja toimituspisteiden perusteella
             directionsDisplay.setMap(map);
             var request = {
               origin: origin,
@@ -294,16 +299,17 @@ function initMap() {
               travelMode: google.maps.TravelMode.DRIVING,
             }
 
+            // Reitityksen käsittely
             directionsService.route(request, (result, status) => {
               if (status === google.maps.DirectionsStatus.OK) {
                 let distance = result.routes[0].legs[0].distance.text;
                 let duration = result.routes[0].legs[0].duration.text;
+                // Taulukkoon reitityksen tietojen tuloste
                 document.getElementById('routeDistance').innerText = distance;
                 document.getElementById('routeDuration').innerText = duration;
                 document.getElementById('routeDistanceRow').classList.remove('hidden');
                 document.getElementById('routeDurationRow').classList.remove('hidden');
-
-
+                // Reitityksen näyttö kartalle
                 directionsDisplay.setDirections(result);
               } else {
                 hideRoute();
@@ -315,15 +321,17 @@ function initMap() {
     );
   }
 
+  /**
+   * Kartalla olevan reitityksen poisto funktio
+   */
   function hideRoute() {
     directionsDisplay.setDirections({
       routes: []
     });
+    // Taulukolla olevien reitityksen tietojen poisto
     document.getElementById('routeDistanceRow').classList.add('hidden');
     document.getElementById('routeDurationRow').classList.add('hidden');
   }
-
-
 
   /* 
   Nykyisiä merkkeja tietojen lukeminen
@@ -373,10 +381,9 @@ function initMap() {
 
   /**
    * Tarkastellaan pysäköinnin aikaa ja tulostaa sen pituus sekä osoite
-   * @param {*} place   merkki-olio
-   * @returns           osoite ja sallittu aika (String)
+   * @param {object} place    merkki-olio
+   * @returns                 sallittu pysäköintiaika (String)
    */
-  // <h4>${place.address}</h4>
   const getDurationMsg = place => {
     let msg = '';
     if (place.duration !== 0) {
@@ -392,12 +399,18 @@ function initMap() {
     return msg;
   }
 
+  /**
+   * Poistetaan kaikki kartalla olevia merkkeja,
+   * paitsi json-tiedostosta ladattua
+   */
   const removeNonPlaceMarkers = () => {
+    // Nykysijäinnin merkkiä poistetaan
     if (markerCurrentPlace) {
       markerCurrentPlace.setVisible(false);
       markerCurrentPlace.setMap(null);
       markerCurrentPlace = null;
     }
+    // Hakuosoitteen merkkiä poistetaan
     if (markerSearchPlace) {
       markerSearchPlace.setVisible(false);
       markerSearchPlace.setMap(null);
@@ -418,7 +431,7 @@ function initMap() {
       /* this.setAnimation(google.maps.Animation.BOUNCE); */
       // Painetulla merkilla tietojen näyttö
       removeNonPlaceMarkers();
-      printClickedMarkerData(map, this);
+      getClickedMarkerAddress(map, this);
 
     }
   }
